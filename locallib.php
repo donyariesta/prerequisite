@@ -44,7 +44,6 @@ class enrol_prerequisite_form extends moodleform {
                 array('id' => 'enrolpassword_'.$instance->id));
         }
 
-        // $mform->addElement('bo', 'sads');
 
         $this->add_action_buttons(false, get_string('enrolme', 'enrol_self'));
 

@@ -27,3 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'Self With Prerequisite';
 $string['coursesavailable'] = 'Available Prerequisite Courses';
+$string['canntenrolall'] = 'You need to complete all required course';
+$string['canntenrolany'] = 'You need to complete one of required course';
+$string['alreadyenrolled'] = 'You are already enrolled to this course';
+$string['canntenrol'] = 'Enrolment is disabled or inactive';

@@ -330,16 +330,18 @@ class enrol_prerequisite_plugin extends enrol_plugin {
                 }
             }
         } else {
+            require_once("$CFG->dirroot/enrol/prerequisite/classes/empty_form.php");
             // This user can not self enrol using this instance. Using an empty form to keep
             // the UI consistent with other enrolment plugins that returns a form.
             $data = new stdClass();
             $data->header = $this->get_instance_name($instance);
             $data->info = $enrolstatus;
+            $data->RequiredCourses = $this->getPrerequisite($instance);
 
             // The can_self_enrol call returns a button to the login page if the user is a
             // guest, setting the login url to the form if that is the case.
             $url = isguestuser() ? get_login_url() : null;
-            $form = new enrol_self_empty_form($url, $data);
+            $form = new enrol_prerequisite_empty_form($url, $data);
         }
 
         ob_start();
@@ -352,8 +354,10 @@ class enrol_prerequisite_plugin extends enrol_plugin {
         global $DB, $USER, $CFG;
 
         // Don't enrol user if password is not passed when required.
-        if ($instance->password && !isset($data->enrolpassword)) {
-            return;
+        if ($instance->password) {
+            if (!isset($data->enrolpassword) || (isset($data->enrolpassword) && $data->enrolpassword != $instance->password)) {
+                return;
+            }
         }
 
         $timestart = time();
@@ -365,21 +369,6 @@ class enrol_prerequisite_plugin extends enrol_plugin {
 
         $this->enrol_user($instance, $USER->id, $instance->roleid, $timestart, $timeend);
 
-        // if ($instance->password and $instance->customint1 and $data->enrolpassword !== $instance->password) {
-        //     // It must be a group enrolment, let's assign group too.
-        //     $groups = $DB->get_records('groups', array('courseid'=>$instance->courseid), 'id', 'id, enrolmentkey');
-        //     foreach ($groups as $group) {
-        //         if (empty($group->enrolmentkey)) {
-        //             continue;
-        //         }
-        //         if ($group->enrolmentkey === $data->enrolpassword) {
-        //             // Add user to group.
-        //             require_once($CFG->dirroot.'/group/lib.php');
-        //             groups_add_member($group->id, $USER->id);
-        //             break;
-        //         }
-        //     }
-        // }
         // // Send welcome message.
         // if ($instance->customint4 != ENROL_DO_NOT_SEND_EMAIL) {
         //     $this->email_welcome_message($instance, $USER);
@@ -398,7 +387,6 @@ class enrol_prerequisite_plugin extends enrol_plugin {
 
         global $CFG, $DB, $OUTPUT, $USER;
 
-
         if ($checkuserenrolment) {
             if (isguestuser()) {
                 // Can not enrol guest.
@@ -406,11 +394,11 @@ class enrol_prerequisite_plugin extends enrol_plugin {
             }
             // Check if user is already enroled.
             if ($DB->get_record('user_enrolments', array('userid' => $USER->id, 'enrolid' => $instance->id))) {
-                return get_string('canntenrol', 'enrol_self');
+                return get_string('alreadyenrolled', 'enrol_prerequisite');
             }
         }
         if ($instance->status != ENROL_INSTANCE_ENABLED) {
-            return get_string('canntenrol', 'enrol_self');
+            return get_string('canntenrol', 'enrol_prerequisite');
         }
 
         $courses = $this->getPrerequisite($instance);
@@ -422,9 +410,9 @@ class enrol_prerequisite_plugin extends enrol_plugin {
         }
 
         if($instance->customint8 == 1 && !$all){
-            return get_string('canntenrol', 'enrol_self');
+            return get_string('canntenrolall', 'enrol_prerequisite');
         }elseif($instance->customint8 == 2 && !$any){
-            return get_string('canntenrol', 'enrol_self');
+            return get_string('canntenrolany', 'enrol_prerequisite');
         }
 
 
